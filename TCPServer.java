@@ -62,7 +62,7 @@ class TCPServer {
                     break;
                 case "3":
                     // display all records above the sent score. - setup sub route for displaying
-                    printDbSubset();
+                    printDbSubset(data, outToClient);
                     break;
                 case "4":
                     // display all records
@@ -75,7 +75,7 @@ class TCPServer {
                         outToClient.writeUTF("Record\n" + data + "\nwas deleted.\n");
                         printDb(outToClient);
                     } else {
-                        outToClient.writeUTF(data);
+                        outToClient.writeUTF(deleted);
                     }
                     break;
                 default:
@@ -85,6 +85,19 @@ class TCPServer {
 
         System.out.println("Server closing...");
         server.close();
+    }
+
+    private static void printDbSubset(String score, DataOutputStream outToClient) throws IOException {
+        List<String> fileLines = Files.readAllLines(Paths.get(FILE_NAME));
+        int compare = Integer.parseInt(score);
+        for(String line : fileLines) {
+            String[] parsed = line.split(" ");
+            int storedScore = Integer.parseInt(parsed[3]);
+            if(compare >= storedScore) {
+                System.out.println(line);
+                outToClient.writeUTF(line);
+            }
+        }
     }
 
     private static String deleteOneRecord(String recordNum) throws IOException {

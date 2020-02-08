@@ -18,11 +18,15 @@ class TCPClient {
             "4. display_all: this request displays the information of all the students currently in the database.\n" +
             "5. delete(ID): this request deletes the student entry with that ID.\n\n"
         );
-        System.out.println("Student record: (integer ID) (string FirstName) (string LastName) (integer Score)\n");
+        System.out.println("Student record: (whole number positive integer ID) (string FirstName) (string LastName) (whole number positive Score)\n");
         System.out.println("Separate values by a single space\n\n");
         System.out.print("Enter your command choice: ");
 
         command = inFromUser.readLine();
+        if(!validateIntegerEntry(command)){
+            System.out.println("command is not an integer\n");
+            command = "";
+        }
 
         switch(command) {
             case "0":
@@ -41,7 +45,7 @@ class TCPClient {
                 }
                 break;
             case "2":
-                System.out.print("Enter student ID (integer) to display: ");
+                System.out.print("Enter whole number student ID (integer) to display: ");
                 String case2data = getData();
                 if (validateIntegerEntry(case2data)){
                     command += case2data;
@@ -49,7 +53,7 @@ class TCPClient {
                 }
                 break;
             case "3":
-                System.out.print("Enter score (integer) to search: ");
+                System.out.print("Enter whole number score (integer) to search: ");
                 String case3data = getData();
                 if (validateIntegerEntry(case3data)) {
                     command += case3data;
@@ -88,31 +92,24 @@ class TCPClient {
     static private Boolean validateStudentRecord(String data) {
         String[] dataParsed = data.split(" ");
 
-        try {
-            Integer.parseInt(dataParsed[0]);
-        } catch (NumberFormatException e) {
-            System.out.println("Student ID must be integer");
-            return false;
+        if (validateIntegerEntry(dataParsed[0]) && validateIntegerEntry(dataParsed[3])) {
+            return true;
         }
-
-        try {
-            Integer.parseInt(dataParsed[3]);
-        } catch (NumberFormatException e) {
-            System.out.println("Grade value must be integer");
-            return false;
-        }
-
-        return true;
+        return false;
     }
 
     static private Boolean validateIntegerEntry(String data) {
         try {
-            Integer.parseInt(data);
+            int entry = Integer.parseInt(data);
+            if (entry >= 0 && entry % 1 == 0) {
+                return true;
+            }
         } catch (NumberFormatException e) {
-            System.out.println("Value is not an integer");
+            System.out.println("Validate integer exception: " + e);
             return false;
         }
-        return true;
+        System.out.println("Value is not an integer");
+        return false;
     }
 
     static private void sendToServer(Socket clientSocket, String command) throws IOException {
