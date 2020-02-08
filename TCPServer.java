@@ -27,15 +27,8 @@ class TCPServer {
 
             String command = Character.toString(clientSentence.charAt(0));
             String data = clientSentence.substring(1);
-// 1. add(ID, Fname, Lname, score): this request adds a new student's information into the database.
 
-// 2. display(ID): this request sends the ID of a student to the server and the server returns the information of the student.
-
-// 2. display(score): this request sends a score to the server and the server returns the information of all the students whose scores are above the sent score.
-
-// 3. display_all: this request displays the information of all the students currently in the database.
-
-// 4. delete(ID): this request deletes the student entry with that ID.
+// ADD A NOTE TO THE README THAT THERE ARE FIVE NOT FOUR COMMANDS - THE NUMBERING IS OFF
 
             switch (command) {
                 case "0":
@@ -59,26 +52,34 @@ class TCPServer {
                     // display record by id
                     String record = getOneRecord(data);
                     if (record.charAt(0) == 'R') { // error message
-                        System.out.println(data);
-                        outToClient.writeUTF(data);
+                        System.out.println(record);
+                        outToClient.writeUTF(record);
                     } else {
                         System.out.println("Request satisfied.");
-                        outToClient.writeUTF("Requested record: " + record);
+                        outToClient.writeUTF("Requested record: " + record + " saved to db.\n");
                     }
                     printDb(outToClient);
                     break;
                 case "3":
                     // display all records above the sent score. - setup sub route for displaying
+                    printDbSubset();
+                    break;
                 case "4":
-                    // display all records - setup sub routine for displaying multiple records
+                    // display all records
                     printDb(outToClient);
+                    break;
                 case "5":
-                    // delete record by id - find the record - echo back the record - delete - save
+                    // delete record by id
                     String deleted = deleteOneRecord(data);
                     if (deleted == "true"){
-                        outToClient.writeUTF("Record " + data + " was deleted.");
+                        outToClient.writeUTF("Record\n" + data + "\nwas deleted.\n");
                         printDb(outToClient);
+                    } else {
+                        outToClient.writeUTF(data);
                     }
+                    break;
+                default:
+                    System.out.println("Command received is not recognized: " + command);
             }
         }
 
@@ -130,7 +131,7 @@ class TCPServer {
         List<String> fileLines = Files.readAllLines(Paths.get(FILE_NAME));
         fileLines.add(newData);
         Files.write(Paths.get(FILE_NAME), fileLines);
-        System.out.println("Updated file content: ");
+        System.out.println("Updated file content: " + newData);
     }
 }
 
