@@ -11,31 +11,30 @@ class TCPClient {
 
     while (!command.equals("0")) {
         System.out.print("" +
-            "0. Stop the client and close the server." +
+            "0. Stop the client and close the server.\n" +
             "1. add(ID, Fname, Lname, score): this request adds a new student's information into the database.\n" +
             "2. display(ID): this request sends the ID of a student to the server and the server returns the information of the student.\n" +
             "3. display(score): this request sends a score to the server and the server returns the information of all the students whose scores are above the sent score.\n" +
             "4. display_all: this request displays the information of all the students currently in the database.\n" +
-            "5. delete(ID): this request deletes the student entry with that ID.\n"
+            "5. delete(ID): this request deletes the student entry with that ID.\n\n"
         );
-        System.out.println("Student record: (integer ID) (string FirstName) (string LastName) (integer Score)");
-        System.out.println("Separate values by a single space");
-        System.out.println("");
+        System.out.println("Student record: (integer ID) (string FirstName) (string LastName) (integer Score)\n");
+        System.out.println("Separate values by a single space\n\n");
         System.out.print("Enter your command choice: ");
 
         command = inFromUser.readLine();
 
         switch(command) {
             case "0":
-                command += " stop";
+                command += "stop";
                 sendToServer(clientSocket, command);
                 break;
 
             case "1":
-                System.out.print("Enter student record: ID FName LName Score");
-                String data = getData();
-                if (validateStudentRecord(data)){
-                    command += data;
+                System.out.print("Enter student record: ID FName LName Score \n");
+                String case1data = getData();
+                if (validateStudentRecord(case1data)){
+                    command += case1data;
                     sendToServer(clientSocket, command);
                 } else {
                     System.out.println("That doesn't work, try again");
@@ -43,35 +42,35 @@ class TCPClient {
                 break;
             case "2":
                 System.out.print("Enter student ID (integer) to display: ");
-                String data = getData();
-                if (validateIntegerEntry(data)){
-                    command += data;
+                String case2data = getData();
+                if (validateIntegerEntry(case2data)){
+                    command += case2data;
                     sendToServer(clientSocket, command);
                 }
                 break;
             case "3":
                 System.out.print("Enter score (integer) to search: ");
-                String data = getData();
-                if (validateIntegerEntry(data)) {
-                    command += data;
+                String case3data = getData();
+                if (validateIntegerEntry(case3data)) {
+                    command += case3data;
                     sendToServer(clientSocket, command);
                 }
                 break;
             case "4":
                 System.out.print("Display *ALL* records? (Y/N): ");
-                String data = getData();
-                if (data.toLowerCase() == "y") {
+                String case4data = getData();
+                if (case4data.toLowerCase() == "y") {
                     sendToServer(clientSocket, command);
                 }
                 break;
             case "5":
                 System.out.print("Enter student ID (integer) to DELETE!! ");
-                String data = getData();
-                if (validateIntegerEntry(data)) {
-                    System.out.println("Are you sure you want to DELETE record for ID = " + data);
+                String case5data = getData();
+                if (validateIntegerEntry(case5data)) {
+                    System.out.println("Are you sure you want to DELETE record for ID = " + case5data);
                     String verify = getData();
                     if (verify.toLowerCase() == "y") {
-                        command += data;
+                        command += case5data;
                         sendToServer(clientSocket, command);
                     }
                 }
