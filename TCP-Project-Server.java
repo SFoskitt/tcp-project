@@ -1,28 +1,51 @@
 import java.io.*;
 import java.net.*;
+import java.nio.file.*;
+import java.util.*;
 
-class TCPProjectServer {
+class TCPServer {
     public static void main(String argv[]) throws Exception {
+        System.out.println("Server starting...");
+
         String clientSentence = "";
-        ServerSocket server = new ServerSocket(6789);
-        Socket connectionSocket = server.accept();
+        String fileName = "StudentData.txt";
+        Boolean stop = false;
+
+        ServerSocket server = new ServerSocket(6790);
         System.out.println("Server initiated at port: " + server.getLocalPort());
+
+        Socket connectionSocket = server.accept();
+        System.out.println("Client Socket: " + connectionSocket.getPort());
 
         DataInputStream inFromClient = new DataInputStream(new BufferedInputStream(connectionSocket.getInputStream()));
         DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
 
-        while (!clientSentence.toLowerCase().equals("stop")) {
-            System.out.println("Connection socket open: " + connectionSocket.getLocalPort());
-
+        while (!stop) {
             clientSentence = inFromClient.readUTF();
             System.out.println("Message received: " + clientSentence);
 
-            // need a model?
-            switch (clientSentence) {
+            String command = Character.toString(clientSentence.charAt(0));
+            String data = clientSentence.substring(1);
+            List<String> fileLines = Files.readAllLines(Paths.get(fileName));
+            fileLines.forEach(System.out::println);
+
+            switch (command) {
+                case "0":
+                    stop = true;
+                    inFromClient.close();
+                    outToClient.close();
+                    break;
                 case "1":
-                    // add new record - develop record - append to file - spit out single record - errors for missing values
+                    outToClient.writeUTF("Adding new record: " + data);
+                    fileLines.add(data);
+                    System.out.println("Updated file content: ");
+                    fileLines.forEach(System.out::println);
+                    Files.write(Paths.get(fileName), fileLines);
+                    break;
                 case "2":
                     // display record by id - iterate until record id - spit out single record
+                    String record = getOneRecord(data);
+                    outToClient.writeUTF("Requested record: " + record);
                 case "3":
                     // display all records above the sent score. - setup sub route for displaying multiple records
                 case "4":
@@ -34,9 +57,13 @@ class TCPProjectServer {
             outToClient.writeUTF("SERVER REPLY HERE");
         }
 
-        inFromClient.close();
-        outToClient.close();
+        System.out.println("Server closing...");
         server.close();
+    }
+
+    static private String getOneRecord(List<String> allRecords) {
+
+        return "";
     }
 }
 
