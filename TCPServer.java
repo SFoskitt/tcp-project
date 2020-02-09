@@ -5,112 +5,148 @@ import java.util.*;
 
 class TCPServer {
     private static String FILE_NAME = "StudentData.txt";
+    // private ServerSocket server = new ServerSocket(6790);
+    // private Socket connectionSocket = server.accept();
+
+    // try {
+    //     server = new ServerSocket(6790);
+    //     connectionSocket = server.accept();
+    // } catch (IOException e){
+    //     System.out.println(e);
+    // }
 
     public static void main(String argv[]) throws Exception {
+        ServerSocket server = new ServerSocket(6790);
+        Socket connectionSocket = server.accept();
+
         System.out.println("Server starting...");
 
-        String clientSentence = "";
         Boolean stop = false;
 
-        ServerSocket server = new ServerSocket(6790);
+        // ServerSocket server = new ServerSocket(6790);
         System.out.println("Server initiated at port: " + server.getLocalPort());
 
-        Socket connectionSocket = server.accept();
+        // Socket connectionSocket = server.accept();
         System.out.println("Client Socket: " + connectionSocket.getPort());
 
-        DataInputStream inFromClient = new DataInputStream(new BufferedInputStream(connectionSocket.getInputStream()));
-        DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+        // DataInputStream inFromClient = new DataInputStream(new BufferedInputStream(connectionSocket.getInputStream()));
+        // DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
 
         while (!stop) {
-            clientSentence = inFromClient.readUTF();
+            String clientSentence = getFromClient(connectionSocket);
             System.out.println("Message received: " + clientSentence);
 
             String command = Character.toString(clientSentence.charAt(0));
             String data = clientSentence.substring(1);
 
-// ADD A NOTE TO THE README THAT THERE ARE FIVE NOT FOUR COMMANDS - THE NUMBERING IS OFF
-
             switch (command) {
                 case "0":
                     stop = true;
-                    inFromClient.close();
-                    outToClient.close();
+                    // outToClient.close();
                     break;
                 case "1":
                     // add a new student's information into the database
-                    outToClient.writeUTF("Adding new record: " + data);
+                    outToClient(connectionSocket, "Adding new record: " + data);
                     try {
                         saveToDb(data);
-                        outToClient.writeUTF("Record saved.");
-                        printDb(outToClient);
+                        outToClient(connectionSocket, "Record saved.");
+                        printDb();
                     } catch (IOException e) {
                         System.out.println(e);
-                        outToClient.writeUTF("IO Exception: " + e);
+                        outToClient(connectionSocket, "IO Exception: " + e);
                     }
+                    clientSentence = null;
                     break;
                 case "2":
                     // display record by id
                     String record = getOneRecord(data);
-                    if (record.charAt(0) == 'R') { // error message
+                    String[] recordParsed = record.split(" ");
+                    if (recordParsed[0].equals("Record")) { // check for error message
                         System.out.println(record);
-                        outToClient.writeUTF(record);
+                        outToClient(connectionSocket, record);
                     } else {
                         System.out.println("Request satisfied.");
-                        outToClient.writeUTF("Requested record: " + record + " saved to db.\n");
+                        outToClient(connectionSocket, "Requested record: " + record + " saved to db.\n");
                     }
-                    printDb(outToClient);
+                    String dbPrint2 = printDb();
+                    outToClient(connectionSocket, dbPrint2);
+                    clientSentence = null;
                     break;
                 case "3":
                     // display all records above the sent score. - setup sub route for displaying
-                    printDbSubset(data, outToClient);
+                    String dbPrint3 = getDbSubset(data);
+                    outToClient(connectionSocket, dbPrint3);
+                    clientSentence = null;
                     break;
                 case "4":
                     // display all records
-                    printDb(outToClient);
+                    String dbPrint4 = printDb();
+                    outToClient(connectionSocket, dbPrint4);
+                    clientSentence = null;
                     break;
                 case "5":
                     // delete record by id
                     String deleted = deleteOneRecord(data);
-                    if (deleted == "true"){
-                        outToClient.writeUTF("Record\n" + data + "\nwas deleted.\n");
-                        printDb(outToClient);
+                    if (deleted.equals("true")){
+                        outToClient(connectionSocket, "Record\n" + data + "\nwas deleted.\n");
+                        String dbPrint5 = printDb();
+                        outToClient(connectionSocket, dbPrint5);
                     } else {
-                        outToClient.writeUTF(deleted);
+                        outToClient(connectionSocket, deleted);
                     }
+                    clientSentence = null;
                     break;
                 default:
-                    System.out.println("Command received is not recognized: " + command);
+                    System.out.println("Server is pending next command...");
             }
         }
 
         System.out.println("Server closing...");
+        connectionSocket.close();
         server.close();
     }
 
-    private static void printDbSubset(String score, DataOutputStream outToClient) throws IOException {
+    private static void outToClient(Socket connectionSocket, String data) throws IOException {
+        DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+        System.out.println("connection socket closed? " + connectionSocket.isClosed());
+        System.out.println("connection socket connected? " + connectionSocket.isConnected());
+        outToClient.writeUTF(data);
+        // outToClient.close();
+    }
+
+    private static String getFromClient(Socket connectionSocket) throws IOException {
+        String clientSentence = null;
+        DataInputStream inFromClient = new DataInputStream(new BufferedInputStream(connectionSocket.getInputStream()));
+        while((clientSentence = inFromClient.readUTF()) == null) { }
+        // inFromClient.close();
+        return clientSentence;
+    }
+
+    private static String getDbSubset(String score) throws IOException {
         List<String> fileLines = Files.readAllLines(Paths.get(FILE_NAME));
         int compare = Integer.parseInt(score);
+        String messageToClient = "";
         for(String line : fileLines) {
             String[] parsed = line.split(" ");
             int storedScore = Integer.parseInt(parsed[3]);
             if(compare >= storedScore) {
                 System.out.println(line);
-                outToClient.writeUTF(line);
+                messageToClient += line;
             }
         }
+        return messageToClient;
     }
 
     private static String deleteOneRecord(String recordNum) throws IOException {
         List<String> fileLines = Files.readAllLines(Paths.get(FILE_NAME));
-        char compare = recordNum.charAt(0);
         String remove = "";
         for(String line : fileLines) {
-            char fileLineId = line.charAt(0);
-            if(compare == fileLineId){
+            String[] lineParsed = line.split(" ");
+            if(recordNum.equals(lineParsed[0])){
                 remove = line;
             }
         }
-        if (remove != "") {
+        if (!remove.equals("")) {
             fileLines.remove(remove);
             Files.write(Paths.get(FILE_NAME), fileLines);
             return "true";
@@ -122,22 +158,23 @@ class TCPServer {
         List<String> fileLines = Files.readAllLines(Paths.get(FILE_NAME));
         ListIterator<String> recordIterator = fileLines.listIterator();
         while(recordIterator.hasNext()){
-            String tmp = recordIterator.next().toString();
-            char compare = tmp.charAt(0);
-            char record = recordNum.charAt(0);
-            if (compare == record){
-                return recordIterator.next().toString();
+            String recordString = recordIterator.next().toString();
+            String[] recordParsed = recordString.split(" ");
+            if (recordParsed[0].equals(recordNum)) {
+                return recordString;
             }
         }
         return "Record does not exist";
     }
 
-    private static void printDb(DataOutputStream outToClient) throws IOException {
+    private static String printDb() throws IOException {
+        String messageToClient = "";
         List<String> fileLines = Files.readAllLines(Paths.get(FILE_NAME));
         for(String line : fileLines) {
             System.out.println(line);
-            outToClient.writeUTF(line);
+            messageToClient += line + "\n";
         }
+        return messageToClient;
     }
 
     private static void saveToDb(String newData) throws IOException {
