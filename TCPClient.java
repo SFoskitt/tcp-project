@@ -123,9 +123,6 @@ class TCPClient {
         while((serverResponse = inFromServer.readUTF()) == null){
         }
         System.out.println("RESPONSE FROM SERVER:\n" + serverResponse); // inFromServer.readUTF()
-        System.out.println("FTW");
-        // outToServer.close();
-        // inFromServer.close();
     }
 }
 
