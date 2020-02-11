@@ -31,8 +31,8 @@ class TCPClient {
 
         switch(command) {
             case "0":
-                command += "stop";
-                sendToServer(clientSocket, command);
+                System.out.println("Client stopping...");
+                closeServer(clientSocket, "0stop");
                 break;
 
             case "1":
@@ -45,6 +45,7 @@ class TCPClient {
                     System.out.println("That doesn't work, try again");
                 }
                 break;
+
             case "2":
                 System.out.print("Enter whole number student ID (integer) to display: ");
                 String case2data = inFromUser.readLine();
@@ -53,6 +54,7 @@ class TCPClient {
                     sendToServer(clientSocket, command);
                 }
                 break;
+
             case "3":
                 System.out.print("Enter whole number score (integer) to search: ");
                 String case3data = inFromUser.readLine();
@@ -61,6 +63,7 @@ class TCPClient {
                     sendToServer(clientSocket, command);
                 }
                 break;
+
             case "4":
                 System.out.print("Display *ALL* records? (Y/N): ");
                 String case4data = inFromUser.readLine();
@@ -68,27 +71,24 @@ class TCPClient {
                     sendToServer(clientSocket, command);
                 }
                 break;
+
             case "5":
                 System.out.print("Enter student ID (integer) to DELETE!! ");
                 String case5data = inFromUser.readLine();
                 if (validateIntegerEntry(case5data)) {
                     System.out.println("Are you sure you want to DELETE record for ID = " + case5data + " (y/n)?");
                     String verify = inFromUser.readLine();
-                    System.out.println("wtf " + verify.toLowerCase() + " " + verify);
                     if (verify.equalsIgnoreCase("y")) {
                         command += case5data;
                         sendToServer(clientSocket, command);
                     }
                 }
                 break;
+
             default:
                 System.out.println("That command was not clear at all, please try again.");
         }
     }
-
-    System.out.println("Client stopping...");
-    inFromUser.close();
-    clientSocket.close();
   }
 
     static private Boolean validateStudentRecord(String data) {
@@ -123,6 +123,12 @@ class TCPClient {
         while((serverResponse = inFromServer.readUTF()) == null){
         }
         System.out.println("RESPONSE FROM SERVER:\n" + serverResponse); // inFromServer.readUTF()
+    }
+
+    static private void closeServer(Socket clientSocket, String command) throws IOException {
+        DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+        outToServer.writeUTF(command);
+        outToServer.close();
     }
 }
 

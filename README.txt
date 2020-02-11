@@ -24,11 +24,11 @@ StudentData.txt comes pre-filled but can be blank when the server starts
 
 >> HOW TO RUN <<
   -- FIRST start the server:
-    1. in a new terminal run `java TCPServer`
+    1. in a new terminal run `java TCPServer` (note: NOT `java TCPServer.class`)
     2. server echos client commands
 
   -- THEN start the client:
-    1. in a separate new terminal run `java TCPClient`
+    1. in a separate new terminal run `java TCPClient` (note: NOT `java TCPClient.class`)
     2. client writes instructions to user to the termainal
     3. enter 0 in client to stop client and close server
 

@@ -29,58 +29,62 @@ class TCPServer {
                 case "0":
                     stop = true;
                     break;
+
                 case "1":
                     // add a new student's information into the database
-                    outToClient(connectionSocket, "Adding new record: " + data);
-                    try {
-                        saveToDb(data);
-                        outToClient(connectionSocket, "Record saved.");
-                        printDb();
-                    } catch (IOException e) {
-                        System.out.println(e);
-                        outToClient(connectionSocket, "IO Exception: " + e);
+                    String clientMessage1;
+                    if (saveToDb(data)) {
+                        clientMessage1 = "Record " + data + " saved to db.\n";
+                    } else {
+                        clientMessage1 = "Problem saving new record. Try again?\n";
                     }
+                    outToClient(connectionSocket, clientMessage1);
                     clientSentence = null;
                     break;
+
                 case "2":
                     // display record by id
                     String record = getOneRecord(data);
                     String[] recordParsed = record.split(" ");
+                    String clientMessage2;
                     if (recordParsed[0].equals("Record")) { // check for error message
                         System.out.println(record);
-                        outToClient(connectionSocket, record);
+                        clientMessage2 = record;
                     } else {
                         System.out.println("Request satisfied.");
-                        outToClient(connectionSocket, "Requested record: " + record + " saved to db.\n");
+                        clientMessage2 = "Requested record: " + record + "\n";
                     }
-                    String dbPrint2 = printDb();
-                    outToClient(connectionSocket, dbPrint2);
+                    outToClient(connectionSocket, clientMessage2);
                     clientSentence = null;
                     break;
+
                 case "3":
                     // display all records above the sent score. - setup sub route for displaying
                     String dbPrint3 = getDbSubset(data);
                     outToClient(connectionSocket, dbPrint3);
                     clientSentence = null;
                     break;
+
                 case "4":
                     // display all records
                     String dbPrint4 = printDb();
                     outToClient(connectionSocket, dbPrint4);
                     clientSentence = null;
                     break;
+
                 case "5":
                     // delete record by id
                     String deleted = deleteOneRecord(data);
                     if (deleted.equals("true")){
-                        outToClient(connectionSocket, "Record\n" + data + "\nwas deleted.\n");
-                        String dbPrint5 = printDb();
-                        outToClient(connectionSocket, dbPrint5);
+                        String clientMessage5 = "Record " + data + " was deleted.\n";
+                        clientMessage5 += printDb();
+                        outToClient(connectionSocket, clientMessage5);
                     } else {
-                        outToClient(connectionSocket, deleted);
+                        outToClient(connectionSocket, deleted); // if not true, deleted is error message
                     }
                     clientSentence = null;
                     break;
+
                 default:
                     System.out.println("Server is pending next command...");
             }
@@ -93,8 +97,6 @@ class TCPServer {
 
     private static void outToClient(Socket connectionSocket, String data) throws IOException {
         DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
-        System.out.println("connection socket closed? " + connectionSocket.isClosed());
-        System.out.println("connection socket connected? " + connectionSocket.isConnected());
         outToClient.writeUTF(data);
     }
 
@@ -112,9 +114,9 @@ class TCPServer {
         for(String line : fileLines) {
             String[] parsed = line.split(" ");
             int storedScore = Integer.parseInt(parsed[3]);
-            if(compare >= storedScore) {
+            if(compare < storedScore) {
                 System.out.println(line);
-                messageToClient += line;
+                messageToClient += line + "\n";
             }
         }
         return messageToClient;
@@ -160,11 +162,17 @@ class TCPServer {
         return messageToClient;
     }
 
-    private static void saveToDb(String newData) throws IOException {
-        List<String> fileLines = Files.readAllLines(Paths.get(FILE_NAME));
-        fileLines.add(newData);
-        Files.write(Paths.get(FILE_NAME), fileLines);
-        System.out.println("Updated file content: " + newData);
+    private static Boolean saveToDb(String newData) throws IOException {
+        try {
+            List<String> fileLines = Files.readAllLines(Paths.get(FILE_NAME));
+            fileLines.add(newData);
+            Files.write(Paths.get(FILE_NAME), fileLines);
+            System.out.println("Updated file content: " + newData);
+            return true;
+        } catch (IOException e) {
+            System.out.println("Problem saving to db");
+            return false;
+        }
     }
 }
 
