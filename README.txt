@@ -7,6 +7,7 @@ The client opens a TCP connection on the same port
 The server confirms the connection
 The client writes to terminal the list of optional commands
 From the client send "0" to stop the client and close the server
+StudentData.txt comes pre-filled but can be blank when the server starts
 
 -- source files
     TCPClient.java
