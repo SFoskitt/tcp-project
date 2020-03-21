@@ -4,7 +4,7 @@ import java.net.*;
 class TCPClient {
  public static void main(String argv[]) throws Exception {
     String command = "";
-    Socket clientSocket = new Socket("localhost", 6790);
+    Socket clientSocket = new Socket("eros.cs.txstate.edu", 6790);
 
     BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
     System.out.println("Client started: " + clientSocket.getPort());
